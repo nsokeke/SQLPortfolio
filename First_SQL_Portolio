@@ -1,0 +1,42 @@
+/*Our content engagement team is looking into adding an option for our subscribers to start selecting which content to watch based on their IMDb scores. May you return a list of titles based on their imdB scores? Sort the scores from highest to lowest.*/
+select title,
+imdb
+from streaming_shows
+order by imdb desc
+
+/*Sorry about this……this will need to be censored based on age restrictions. So, may you also add in the appropriate viewing audience age as well? We will now need this to be sorted by age from the youngest age viewing allowance to the oldest, then by the IMDb scores from highest to lowest. Thanks!*/
+select title,
+imdb,
+rating
+from streaming_shows
+order by rating asc, imdb desc
+
+/*We now need the same information for Rotten Tomatoes as well but instead of the age, we will need the following: Content titles, their year of release, and their Rotten Tomatoes score. Sort by the year of release from newest to oldest and their Rotten Tomatoes score from smallest to largest.*/ 
+select title,
+year,
+rotten_tomatoes
+from streaming_shows
+order by year desc, rotten_tomatoes asc
+
+/*Finance needs a list of our mobile and non-basic plans pricing for each country prior to the end of the day. We want to see the countries with the cheapest premium plans listed first.*/
+select country,
+code,
+mobile_usd,
+standard_usd,
+premium_usd
+from netflix_prices
+order by premium_usd asc
+
+/*Finance needs a list of our mobile and non-basic plans pricing for each country prior to the end of the day. We want to see the countries with the cheapest premium plans listed first.*/
+select country,
+code,
+mobile_usd,
+standard_usd,
+premium_usd
+from netflix_prices
+order by premium_usd asc
+
+
+
+
+
