@@ -851,6 +851,120 @@ cof.cof_type
 from userbase inner join cof on cof.cc_id=userbase.user_id
 where cof.cof_type != 'AMEX'
 
+/*The Finance team is doing some pricing analysis for our non-top market customers and needs a list of our email subscribers, along with their names, country of residence, currency, and the USD pricing for all plans in their respective countries.*/
+select email_sub.id,
+sub_demo.sub_fname,
+sub_demo.sub_lname,
+userbase.country,
+netflix_prices.currency,
+netflix_prices.basic_usd,
+netflix_prices.standard_usd,
+netflix_prices.premium_usd
+from email_sub inner join userbase on userbase.user_id=email_sub.id /*This is joining the email_sub table and the userbase table 
+on the common ID columns from each table*/
+inner join netflix_prices on netflix_prices.country=userbase.country /*We are now joining in our third table (Netflix Prices) with at least ONE of the other tables we have already joined (either Userbase or Email_Sub). We decided to join the Prices table with the Userbase table on the Country column*/
+inner join sub_demo on sub_demo.sub_id=userbase.user_id /*We are now joining in our fourth table (Sub Demo) with at least
+ONE of the other three tables we have joined in (Prices, Email_Sub, or Userbase table. We decided to join the sub_Demo table with the Userbase table on the ID columns*/
+where netflix_prices.country not in ('Canada','United States')
+
+/*Our international finance team is asking if you can provide the domestic currency for all non-email subscribers located outside of our top markets. Thanks!*/
+select 
+userbase.user_id,
+userbase.country,
+email_sub.id,
+netflix_prices.currency
+from userbase left join email_sub on email_sub.id=userbase.user_id
+inner join netflix_prices on netflix_prices.country=userbase.country
+where email_sub.id is null and userbase.country not in ('Canada','United States')
+
+/*Our Finance Director is wanting to see if there is a correlation between our stock price and subscriber registration for non Visa and Mastercard users. They want to see how our stock price can be impacted based on the potential new laws on credit card fees with Visa and Mastercard. They want to see if on the days there were stock trades and new users who joined on those days, how many of those users registered didn’t use Visas or Mastercards.*/
+select stock_price.trading_date,
+userbase.user_id,
+userbase.join_date,
+cof.cof_type
+from stock_price inner join userbase on userbase.join_date=stock_price.trading_date
+inner join cof on cof.cc_id=userbase.user_id
+where cof.cof_type not in ('VISA','MC')
+order by stock_price.trading_date asc
+
+/*We are running a cross-promotion marketing campaign in specific countries to get more non-premium Visa and Mastercard subscribers to opt in for our emails. The countries we are looking to target are those who have a conversion premium compared to the US dollar since these countries have higher prices compared to others.  May you provide the following for these subscribers:
+•	Names and account ID 
+•	Their country of residence
+•	Their local currency
+•	Conversion rate
+•	Conversion rate premium compared to the US (i.e. if Euro’s conversion is 1.26, their premium would be 26% compared to the US)*/
+select userbase.user_id,
+email_sub.id,
+sub_demo.sub_fname,
+sub_demo.sub_lname,
+userbase.subscription_type,
+cof.cof_type,
+userbase.country,
+netflix_prices.currency,
+netflix_prices.conversion,
+netflix_prices.conversion - 1 as Conversion_Premium
+from userbase left join email_sub on email_sub.id=userbase.user_id
+inner join cof on cof.cc_id=userbase.user_id
+inner join sub_demo on sub_demo.sub_id=userbase.user_id
+inner join netflix_prices on netflix_prices.country = userbase.country
+where email_sub.id is null and userbase.subscription_type != 'Premium' and cof.cof_type in ('VISA','MC')
+and netflix_prices.conversion > 1
+
+/*The Director of Content is requesting rating details for Hulu and Amazon featured drama shows that didn’t get content renewal for their content.*/
+select Streaming_Shows.Title, 
+Titles.Show_ID,
+CONTENT_EXPIRE.EXP_RENEWAL,
+ratings.ratinglevel as Ratings_Description
+from streaming_shows left join titles on titles.title=streaming_shows.title /*Pull all items from the streaming shows table and compare it to the Titles table to see if the titles in the Streaming Shows table are also in the Titles table*/
+left join content_expire on content_expire.show_id=titles.show_id
+left join ratings on ratings.rating=titles.rating
+where content_expire.exp_renewal is null and streaming_shows.hulu = 1 and streaming_shows.prime_video = 1
+
+/*The DBA noticed that some of our titles in the Streaming Shows table are incorrectly formatted for the ratings record. Can you provide a list of which ratings in this table are incorrectly formatted based on the ratings in the Ratings table?*/
+select distinct streaming_shows.rating as SS_Ratings,
+ratings.rating as Ratings_Table_Ratings
+from streaming_shows left join ratings on ratings.rating=streaming_shows.rating
+where ratings.rating is null
+
+/*The content team is in the process of updating content information for TV shows and are in need of the number of mature and general audience rated shows that are featured on at least two streaming platforms that do not have casting information, along with their review scores for these shows. May you provide prior to EOD?*/
+select Streaming_shows.title,
+titles.cast,
+streaming_shows.hulu,
+streaming_shows.disneyplus,
+streaming_shows.netflix,
+streaming_shows.prime_video,
+streaming_shows.imdb,
+streaming_shows.rotten_tomatoes,
+streaming_shows.rating,
+ratings.ratinglevel,
+hulu+disneyplus+netflix+prime_video as Streaming_Count
+from streaming_shows left join titles on titles.title=streaming_shows.title
+inner join ratings on ratings.rating=streaming_shows.rating
+where titles.cast is null and (ratings.ratinglevel like '%General%' or ratings.ratinglevel like '%mature%')
+and hulu+disneyplus+netflix+prime_video >= 2
+
+/*We are running a cross promotion with various NPOs (non-profit organizations) in order to get more subscribers who work in the NPO field to register for our email list. Anyone who signs up will receive a 10% monthly discount on their current monthly billing plan as long as they have been a subscriber for at least 12 months.
+
+Finance would also like to see what these potential subscribers' new monthly billing cost will be once the discount is applied, along with the annual revenue we will receive from the subscribers, and the difference between the annual revenue with the new discount applied and the annual revenue from the non-discounted price.
+
+Please provide a list of these customers (include names and IDs) along with their financial information requested by Finance.FYI, all NPO subscribers have a .org email address.*/
+select sub_demo.*/
+email_sub.*,
+userbase.join_date,
+datediff(month,join_date,getdate()) as Term,
+userbase.monthly_revenue,
+userbase.monthly_revenue * .10 as Monthly_Discount_Amount,
+userbase.monthly_revenue *.90 as New_Monthly_Bill_Rate,
+userbase.monthly_revenue * 12 as Annual_Revenue,
+userbase.monthly_revenue *.90 * 12 as New_Annual_Revenue,
+(userbase.monthly_revenue *.90 * 12) - (userbase.monthly_revenue * 12) as Annual_Difference
+from sub_demo left join email_sub on email_sub.id=sub_demo.sub_id
+inner join userbase on userbase.user_id=sub_demo.sub_id
+where email_sub.id is null and sub_demo.e_dom like '%.org%' and datediff(month,join_date,getdate()) >= 12
+
+/*
+
+
 
 
 
