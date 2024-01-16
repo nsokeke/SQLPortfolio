@@ -1458,6 +1458,89 @@ userbase.country not in ('Mexico','Canada','Brazil','United States') and
 and sub_demo.e_dom not like '%outlook%' and sub_demo.e_dom not like '%hotmail%') 
 and email_sub.id is null 
 
+/*Non-email subscribers, implement a 12% increase for all prices for standard+ subscription packages (where the dollar is stronger compared to the country’s domestic currency) - (excluding the US and Canadian markets). Non-email subscribers, implement a 5% decrease across board for all markets where the dollar is weaker compared to the country’s domestic currency (excluding the US and Canadian markets). Non-email subscribers, calculate a 1% discount on the new prices if the subscriber is a Visa cardholder. Non-email subscribers calculate a 2% discount for subscribers that are Discover and AMEX cardholders. All others will not receive a discount. Calculated the implementation of the price changes 45 days from the start of the new year.  List of these subscribers along with all data reflecting these new changes. Provide the incremental annual revenue from each subscriber (previous annual revenue vs. new annual revenue with price changes). He wants to see the data banded as the following:
+o	New monthly revenue that is between $10 to $13, Pricing Group 1
+o	New monthly revenue that is between $14 to $17, Pricing Group 2
+o	All others, Pricing Group 3
+o	Organized the data by markets, subscribers from stronger markets first, then all the others. */
+select userbase.user_id,
+email_sub.id as Email_Sub_ID,
+userbase.subscription_type,
+dateadd(day,45,'01/01/2024') as EffectiveDate,
+userbase.country,
+netflix_prices.conversion,
+userbase.monthly_revenue,
+userbase.monthly_revenue*12 as Prev_Annual_Revenue,
+
+
+case when netflix_prices.conversion < 1 then userbase.monthly_revenue * 1.12
+    else userbase.monthly_revenue * .95 end as New_Prices_wo_CC_Discount,
+
+
+
+cof.cof_type as CC_Type,
+
+case when cof.cof_type = 'VISA' then (case when netflix_prices.conversion < 1 then userbase.monthly_revenue * 1.11
+    else userbase.monthly_revenue * .94 end)
+
+    when cof.cof_type in ('DSCVR','AMEX') then (case when netflix_prices.conversion < 1 then userbase.monthly_revenue * 1.1
+    else userbase.monthly_revenue * .93 end)
+
+    else (case when netflix_prices.conversion < 1 then userbase.monthly_revenue * 1.12
+    else userbase.monthly_revenue * .95 end) end as New_Prices_w_CC_Discount,
+
+    
+
+(case when cof.cof_type = 'VISA' then (case when netflix_prices.conversion < 1 then userbase.monthly_revenue * 1.11
+    else userbase.monthly_revenue * .94 end)
+
+    when cof.cof_type in ('DSCVR','AMEX') then (case when netflix_prices.conversion < 1 then userbase.monthly_revenue * 1.1
+    else userbase.monthly_revenue * .93 end)
+
+    else (case when netflix_prices.conversion < 1 then userbase.monthly_revenue * 1.12
+    else userbase.monthly_revenue * .95 end) end) * 12 as New_Annual_Revenue,
+
+
+( (case when cof.cof_type = 'VISA' then (case when netflix_prices.conversion < 1 then userbase.monthly_revenue * 1.11
+    else userbase.monthly_revenue * .94 end)
+
+    when cof.cof_type in ('DSCVR','AMEX') then (case when netflix_prices.conversion < 1 then userbase.monthly_revenue * 1.1
+    else userbase.monthly_revenue * .93 end)
+
+    else (case when netflix_prices.conversion < 1 then userbase.monthly_revenue * 1.12
+    else userbase.monthly_revenue * .95 end) end) * 12) - (userbase.monthly_revenue*12) as Incremental_Annual_Revenue,
+
+
+case when (case when cof.cof_type = 'VISA' then (case when netflix_prices.conversion < 1 then userbase.monthly_revenue * 1.11
+    else userbase.monthly_revenue * .94 end)
+
+    when cof.cof_type in ('DSCVR','AMEX') then (case when netflix_prices.conversion < 1 then userbase.monthly_revenue * 1.1
+    else userbase.monthly_revenue * .93 end)
+
+    else (case when netflix_prices.conversion < 1 then userbase.monthly_revenue * 1.12
+    else userbase.monthly_revenue * .95 end) end) between 10 and 13.99 then 'Pricing Group 1' 
+
+
+                        when (case when cof.cof_type = 'VISA' then (case when netflix_prices.conversion < 1 then userbase.monthly_revenue * 1.11
+                        else userbase.monthly_revenue * .94 end)
+                    
+                        when cof.cof_type in ('DSCVR','AMEX') then (case when netflix_prices.conversion < 1 then userbase.monthly_revenue * 1.1
+                        else userbase.monthly_revenue * .93 end)
+                    
+                        else (case when netflix_prices.conversion < 1 then userbase.monthly_revenue * 1.12
+                        else userbase.monthly_revenue * .95 end) end) between 14 and 17 then 'Pricing Group 2' 
+
+                else 'Pricing Group 3' end as Pricing_Groups
+    
+from userbase left join email_sub on userbase.user_id=email_sub.id
+join netflix_prices on netflix_prices.country=userbase.country
+join cof on cof.cc_id=userbase.user_id
+where userbase.country not in ('United States','Canada') and userbase.subscription_type in ('Standard','Premium') and
+email_sub.id is null and netflix_prices.conversion != 1
+order by conversion asc
+
+
+
 
 
 
