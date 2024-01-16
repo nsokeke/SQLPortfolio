@@ -36,6 +36,740 @@ premium_usd
 from netflix_prices
 order by premium_usd asc
 
+/*The content strategy team needs a list of all tv shows on Netflix with at least a 7.0 score on IMDb and at least a 75 Rotten Tomatoes score for shows released after our inception. Sort by the score from largest to smallest, then by the title name from A to Z.*/
+select title,
+netflix,
+imdb,
+rotten_tomatoes,
+year
+from streaming_shows
+where netflix = '1' and imdb >= 7.0 and rotten_tomatoes >= 75 and year > 1997
+order by rotten_tomatoes desc, title asc
+
+/*Actually, they need a list of all tv shows that are on all streaming platforms (excluding Disney+ as this is an available add on with Hulu) with this same information as #1.*/
+select 
+title,
+netflix,
+hulu,
+prime_video
+imdb,
+rotten_tomatoes,
+year
+from streaming_shows
+where netflix = '1' and hulu = '1' and prime_video = '1' and imdb >= 7.0 and rotten_tomatoes >= 75 and year > 1997
+order by rotten_tomatoes desc, title asc
+
+/*Just got back from a meeting with the content department. Unfortunately, their data analyst is out on leave, and they are in need of data pulls. May you provide them with the following at your earliest convenience:
+ Provide a list of all movies released in Central America within the last 10 years. (S)
+A list of all titles that were released after 2019. The director is a stickler for reviewing this information in a certain order to make it easier for him to digest. With this being said, please be sure to sort by title from A to Z.*/
+select title,
+release_year
+from titles
+where release_year > 2019 
+order by 1 asc
+
+/*Titles that were released during the pandemic. Again, refer to what I stated about the content director’s preference.*/
+select title,
+release_year
+from titles
+where release_year = 2020
+order by 1 asc
+
+/*10 non-reality TV shows that had the longest run*/
+select title,
+no_seasons
+from titles
+where type = 'TV Show' and listed_in not like '%Reality%'
+order by no_seasons desc
+limit 10
+
+/*25 longest movies outside of our top markets released prior to the pandemic*/
+select type,
+title,
+country,
+release_year,
+duration
+from titles
+where release_year < 2020 and (country not like '%United States%' and country not like '%Canada%')
+and type = 'Movie'
+order by duration desc 
+limit 25
+
+/*Just spoke with Jim from the Subscriber Finance team, and he is doing some analysis on our subscription payments. I provided him with some potential data points he would need in order to get what he is looking for. I need your assistance in providing him with the following:
+Which premium users have a non-mobile plan?*/
+select user_id
+from userbase
+where subscription_type = 'Premium' and primary_device = 'Smart TV'
+
+/*List of millennial users in our top market that joined in the last year whose monthly subscription is at least $14.99 per month. Sort by the country from A to Z, then by the join date from newest to oldest if you may.*/
+select 
+user_id,
+monthly_revenue,
+join_date,
+age,
+country
+from userbase
+where age between 25 and 34 and country in ('United States','Canada') and
+join_date between '10/01/2022' and '09/30/2023' and monthly_revenue >= 14.99
+
+/*Users whose last payments were made on weekends. This is becoming an issue with our bank due to the processing delay we experience with these payments vs. weekday payments.*/
+select user_id,
+last_payment_date,
+dayname(last_payment_date)
+from userbase
+where dayname(last_payment_date) in ('Sat','Sun')
+
+/*All users who have made payments since the onset of the writers strike in May.*/
+select user_id,
+last_payment_date
+from userbase
+where last_payment_date >= '05/01/2023'
+
+/*All users who joined the quarter after the start of the pandemic*/
+select user_id,
+join_date,
+monthname(join_date) as Join_Month,
+year(join_date) as Join_Year
+from userbase
+where monthname(join_date) in ('Apr','May','Jun') and year(join_date) = 2020
+
+/*All users, along with their user data, that are not located in our largest markets that joined in the last year.*/
+select *
+from userbase
+where country not in ('United States','Canada') and join_date between '10/1/2022' and '10/1/2023'
+
+/*All users who joined in the months after the start of the pandemic during 2020 in our top markets on mobile devices.*/
+You can not pull due to 2020 data not being in the table.
+
+/*All users who joined on weekdays*/
+select user_id,
+last_payment_date,
+dayname(last_payment_date) as Payment_Day
+from userbase
+where dayname(last_payment_date) not in ('Sat','Sun')
+
+/*The talent team is in talks with a few A-list celebrities to sign multi-year contracts for Netflix-produced films. Currently, they are meeting with Kevin Hart’s and J Lo’s team and need the following:
+List of all titles that star Kevin Hart. Sort the titles by year of release please */
+select 
+title,
+release_year,
+"CAST"
+from titles
+where "CAST" like '%Kevin Hart%'
+order by 2 asc
+
+/*US-only released movies that starred J.Lo*/
+select 
+title,
+"CAST",
+country
+from titles
+where "CAST" like '%Jennifer Lopez%'
+
+/*List of directors as the directors Kevin and Jennifer will work with will be contingent on their contracts.*/
+select 
+director
+from titles
+
+/*We are meeting with Nielsen next week in regard to ratings regulations. Can you pull the following information prior to our meeting:
+Which shows are appropriate for adults only? */
+select title,
+rating
+from titles
+where type = 'TV Show' and rating in ('TV-MA','TV-PG','R')
+
+/*Which directors have PG-13 movies that were released in the last 3 years?*/
+select Director,
+title,
+Type,
+Rating,
+Release_Year
+from titles
+where type = 'Movie' and rating = 'PG-13' and release_year between 2020 and 2023
+
+/*Can you pull the 5 best days for Netflix’s stock that took place after COVID for our IR team?*/
+select trading_date,
+close 
+from stock_price
+where trading_date >= '04/01/2020'
+order by close desc
+limit 5
+
+/*May you return all patient data? Be sure to sort the data by last name from A to Z, then by first name from A to Z */
+select *
+from patient_services_demographics
+order by first_name asc, last_name asc
+
+/*Which Boomer aged patients received meal related services? Boomers are patients that are at least 57 years old */
+select first_name,
+last_name,
+patient_id_no,
+servicename
+from patient_services_demographics
+where age >= 57 and servicename like '%Meals%'
+
+/*Return a list of the 25 employees with the lowest hourly rate in any non support
+departments (Support Departments: HR, Marketing, and Sales) who reside in the tri-state area:
+Connecticut, New Jersey, and New York who have been employed with the company for at least
+6 months */
+select employee_id,
+emplfirst,
+empllast,
+HOURLY_RATE,
+department,
+state,
+hire_date,
+datediff(month,hire_date,getdate()) as Hire_Term
+from employee_demographics
+where department not in ('HR','Marketing','Sales') and state in ('NY','NJ','CT') and
+datediff(month,hire_date,getdate()) >= 6
+order by hourly_rate asc
+limit 25
+
+/*Provide us with the 10 highest approved claim amounts for claims that were processed in Q1 2022*/
+select first_name,
+last_name,
+patient_id_no,
+quarter(date_of_claim) as Quarter_Number,
+year(date_of_Claim) as Year,
+date_of_claim,
+amount
+from patient_services_demographics
+where claim_status = 'Approved' and quarter(date_of_claim) = 1 and year(date_of_claim) = 2022
+order by amount desc
+limit 10
+
+/*The Director of Patient Services of the West Coast Division (California, Nevada, Arizona,
+Oregon, Washington, New Mexico, and Texas) is looking for patients in her division who are
+senior citizens (66 and older) whose claims took place between Q1 2020 and 2023, at least
+$100 and currently in pending status. She needs this information for any patients who have
+received any community or transportation named services. She does want to review this
+information for patients who are oldest first. */
+select first_name,
+last_name,
+PATIENT_ID_NO,
+Age,
+State,
+DATE_OF_CLAIM,
+year(date_of_claim) as Year_Of_Claim, quarter(date_of_claim) as Quarter_Claim, SERVICENAME,
+CLAIM_STATUS,
+AMOUNT
+from patient_services_demographics
+where age >= 66 and state in ('CA','NV','AR','OR','WA','NM','TX') and
+quarter(date_of_claim) = 1 and
+year(date_of_claim) between 2020 and 2023 and amount >= 100 and claim_status = 'Pending' and
+(servicename like ‘%community%’ or servicename like ‘%transportation%’)
+order by age desc
+
+/*The CEO is in need of all employees who were hired in Q1 of this year that are in non
+support departments (HR and Sales are support departments) who reside in the tri state area
+(NY, CT, NJ) who make at least $75/hr and who participates in our benefits (401K and
+Healthcare). Sort by the department from A to Z, then by the salary from largest to smallest.*/
+select employee_id,
+emplfirst,
+empllast,
+state,
+department,
+hire_date,
+quarter(hire_date) as Quarter_of_Year,
+year(hire_date) as Year,
+hourly_rate,
+hourly_rate*2080 as Salary,
+company_match_ytd,
+health_insurance_prem
+from employee_demographics
+where
+quarter(hire_date) = 1 and
+year(hire_date) = 1 and
+department not in ('HR','Sales') and
+state in ('NY','CT','NJ') and
+hourly_rate >= 75 and
+company_match > 0 and health_insurance_prem > 0
+order by department asc, salary desc
+
+/*Which employees were hired this current year?*/
+select employee_id,
+emplfirst,
+empllast,
+hire_date,
+year(hire_date) as Hire_Year
+from employee_demographics
+where year(hire_date) = 2023
+
+/*Which patients received community and transportation services in June 2022 that had
+claims with a 1000 code?*/
+select first_name,
+LAST_NAME,
+PATIENT_ID_NO,
+service_delivery_date,
+monthname(service_delivery_date) as Service_Month,
+year(service_delivery_date) as Service_Year,
+servicecode,
+servicename
+from patient_services_demographics
+where servicecode like '%1000%' and monthname(service_delivery_date) = 'Jun' and servicename in
+('Community Support Services','Medical Transportation') and year(service_delivery_date) = 2022
+
+/*Which patients have themselves or social workers listed as their emergency contacts?*/
+select first_name,
+last_name,
+patient_id_no,
+emergency_contact_relationship
+from patient_services_demographics
+where emergency_contact_relationship like '%social worker%' or emergency_contact_relationship like
+'%self%’ or emergency_contact_relationship like '%Self%’
+
+/*Can you provide us with a list of the top 10 highest paid employees in the Engineering department?*/
+select employee_id,
+emplfirst,
+empllast,
+department,
+hourly_rate
+from employee_demographics
+where department = 'Engineering'
+order by hourly_rate desc
+limit 10
+
+/*Return a list of all departments in our company (non-duplicated).*/
+select distinct department
+from employee_demographics
+
+/*Return a list of patients who had their services provided more than 3 days after the claim date. Be sure to exclude any patients who reported their claim on a weekend date.*/
+select first_name,
+last_name,
+patient_id_no,
+date_of_claim,
+dayname(date_of_claim) as Name_Of_Day,
+service_delivery_date,
+datediff(day,date_of_claim,service_delivery_date) as Turntime
+from patient_services_demographics
+where dayname(date_of_claim) not in ('Sun','Sat') and datediff(day,date_of_claim,service_delivery_date) > 3
+
+/*In the text box below, please write what the query below says. Be sure to use layman's terms.
+SELECT
+First_Name,
+Last_Name,
+Patient_ID_No,
+Age,
+City,
+State,
+Emergency_Contact_First,
+Emergency_Contact_Last,
+Emergency_Contact_Relationship,
+Date_of_Visit,
+Monthname(Date_of_Visit),
+Dayname(Date_of_Visit),
+Year(Date_of_Visit),
+Quarter(Date_of_Visit),
+Claim_Date,
+Vendor,
+ServiceCode,
+ServiceName,
+Claim_Status,
+Claim_Amount,
+Claim_Amount+3.95 as Claim_Fee
+FROM PatientServicesDemographics
+WHERE Age between 65 and 75
+AND City in (‘New York’,’Los Angeles’,’Miami’,’Atlanta’,’Chicago’)
+AND Vendor not in (‘Avant’,’Romino Services’,’Rupert Transpo’)
+AND Claim_Amount
+AND monthname(Claim_Date) in (‘Jan’,’Feb’,’Mar’,’Apr’,’May’,’Jun’)
+AND (ServiceName not like ‘%community%’ and ServiceName not like ‘%transportation%’)
+AND Emergency_Contact_Relationship in (‘child’,’self’,’spouse’)
+AND year(Claim_Date) >= 2019
+AND dayname(Date_of_visit) in (‘Mon’,’Tue’,’Wed’,’Thu’,’Fri’)
+ORDER BY Claim_Amount asc
+LIMIT 20 */
+This query states to pull the following information from the PatientServicesDemographics table for 20
+patients with the lowest claim amount: patients' personal contact information, along with the emergency
+contact information, date/month/year of visits, vendors the patients have received services from, claim
+date, service code, service name, status of claim, claim amount, and the claim amount with a $3.95 added
+for patients based on the following patient parameters:
+- Aged between 65 and 75
+- Reside in NY, LA, Miami, Atlanta, or Chicago
+- Did not receive community or transportation-based services from vendors Avant, Romino Services, and
+Rupert Transpo
+- Claims that took place on weekdays during January through June of 2019 through 2023
+- Have self, their spouse, or their child/children as their emergency contact
+
+/*In the text box below, please provide a list of all of the errors you see in the query below:
+SELECT
+First_Name
+,Last_Name
+,Patient_ID_No
+Age,
+City
+State,
+Date_of_Visit,
+Claim_Date,
+Monthname(Claim_Date,
+Year(Claim_Date),Vendor,
+ServiceCode,
+ServiceName,
+Claim_Status,
+Claim_Amount
+FROM PatientServicesDemographics
+WHERE State in NY,CA,FL,GA,IL,TX
+AND ClaimAmount between 500 and 1000
+Vendor != ABC Services
+ORDER State des
+ORDER BY City asc*/
+Here are the errors present in the query:
+- Missing comma between patient ID and age columns
+- Missing comma between city and state columns
+- Missing closed parentheses after the Monthname(Claim_Date column
+- Missing open and closed parentheses after around the records in the state filter, along with apostrophes
+around each text (WHERE State in 'NY','CA','FL','GA','IL','TX')
+- ClaimAmount column should be Claim_Amount in the WHERE statement
+- ABC Services record in the Vendor filter is missing apostrophes
+- The desc order in the ORDER BY is spelled incorrectly. Should be desc vs. desc
+- Should be only one ORDER BY
+(ORDER BY State desc, City asc)
+
+/*Our SVP of HR wants to give everyone a 10% COLA (cost of living adjustment). Can you please provide me with the following for each employee:
+Current salary
+New salary with the 10% COLA increase
+The amount of the 10% COLA*/
+select emplfirst,
+empllast,
+hourly_rate,
+hourly_rate * 2080 as Salary,
+(hourly_rate * 2080) * .10 as COLA,
+hourly_rate * 2080 * 1.10 as New_Salary_with_COLA
+from employee_demographics
+
+/*Calculate the salary for each employee. Hint: To calculate the salary from an hourly rate, you would
+calculate the following: hourly rate * 2080 hours. 2080 hours are the number of hours employees work
+in a year. */
+select employee_id,
+emplfirst,
+empllast,
+hourly_rate,
+hourly_rate*2080 as Employee_Salary
+from employee_demographics
+
+/*Which 10 employees are paid the most? Be sure to also include the following for these 10
+employees:
+Current salary
+New salary with the 10% COLA increase
+The amount of the 10% COLA*/
+select emplfirst,
+empllast,
+hourly_rate,
+hourly_rate * 2080 as Salary,
+(hourly_rate * 2080) * .10 as COLA,
+hourly_rate * 2080 * 1.10 as New_Salary_with_COLA
+from employee_demographics
+order by Salary desc
+limit 10
+
+/*Please apply a 10% claims processing fee to all non-approved claims. Any claims processing fee
+that is $3 or less can be disregarded.*/
+SELECT *,
+Amount*1.10 as Claim_with_Fee,
+Amount*.10 as Claim_Fee
+FROM patient_services_demographics
+WHERE CLAIM_STATUS !='Approved' and amount*.10 >3
+
+/*Calculate the following: Average annual salary, Maximum annual salary, Minimum annual salary, Number of employees*/
+select Max(2080*hourly_rate) as Highest_Annual_Salary,
+Min(2080*hourly_rate) as Lowest_Annual_Salary,
+Avg(2080*hourly_rate) as Average_Annual_Salary,
+Count(Employee_id) as Number_of_employees
+from employee_demographics
+
+/*What is the average claim amount for patients who reside in high cost of living areas (New York and California)?*/
+select avg(amount) as Avg_Claim_Amount
+from patient_services_demographics
+where state in ('NY','CA')
+
+/*What is the average claim amount for services that were delivered on the same day as the claim?*/
+select avg(amount) as Average_Claim_Amount
+from patient_services_demographics
+where date_of_claim=service_delivery_date
+
+/* What is the average annual salary for direct hires in supporting departments (HR, Sales, and Marketing)*/
+select avg(hourly_rate*2080) as Average_Annual_Salary
+from employee_demographics
+where fte_type = 'Direct' and department in ('HR','Sales','Marketing')
+
+/* May you provide us with a list of countries, how many total titles are on Netflix in the country, and the pricing?*/
+select country,
+basic_cost_per_month,
+standard_cost_per_month,
+premium_cost_per_month,
+no_of_tv_shows,
+no_of_movies,
+no_of_tv_shows + no_of_movies as Total_No_Titles
+from netflix_countries
+
+/* 	Our normal trading volume on the market is roughly 6.5 million shares per day. Return a list of our stock performance along with the trading dates for stocks that traded at least normal volume in Q3 and Q4 in 2021. Be sure to also calculate the difference between the open and close price as we will need this to analyze fluctuations within the stock.*/
+	select quarter(trading_date) as Stock_Quarter,
+year(trading_date) as Stock_Year,
+*,
+close-open as Price_Diff
+from stock_price
+where volume >= 6500000 and quarter(trading_date) > 2 and year(trading_date) = 2021
+
+/*We are considering a 15% increase for all plans for our top 10 countries with the largest content offering (excluding our top markets since we just did a price increase in our top markets). Yet, we only want to increase in these countries if the 15% increase does not exceed $1.50 per month. Return these countries with what the additional increase would be along with their new proposed prices and the size of their content.*/ 
+select *,
+no_of_tv_shows+no_of_movies as Total_Content,
+basic_cost_per_month*1.15 as New_Basic,
+standard_cost_per_month*1.15 as New_Standard,
+premium_cost_per_month*1.15 as New_Premium,
+basic_cost_per_month*.15 as Basic_Discount,
+standard_cost_per_month*.15 as Standard_Discount,
+premium_cost_per_month*.15 as Premium_Discount
+from netflix_countries
+where basic_cost_per_month*.15 <= 1.50 and standard_cost_per_month*.15 <= 1.50 and
+premium_cost_per_month*.15 <= 1.50 and country not in ('United States','Canada')
+order by Total_Content desc
+limit 10
+
+/*How many customers have been with us for at least 12 months?*/
+select user_id,
+join_date,
+getdate() as Todays_Date,
+datediff( month,join_date,'10/8/2023') as Month_Term
+from userbase
+where datediff(month,join_date,'10/8/2023') >= 12
+
+/*We are missing converted pricing for our mobile plans in each country. Due to this, we are in need of the mobile plan pricing for each country. We only need it for countries that do not use a form of the dollar as its foreign currency. Also, be sure to exclude Canada as well.*/
+select country,
+code,
+currency,
+mobile,
+mobile_usd
+from netflix_prices
+where (currency not like '%Dollar%' and currency not like '%dollars%') 
+
+/*Calculate the difference between the highest score vs. the actual score for Rotten Tomatoes scored shows but only the shows that had both Rotten Tomatoes and IMDb scores. Rotten Tomatoes’ highest score is 100.*/
+select title,
+100 as Highest_RT_Score,
+rotten_tomatoes,
+100-rotten_tomatoes as RT_Score_Diff,
+imdb
+from streaming_shows
+where rotten_tomatoes > 0 and imdb > 0
+
+/*Which 10 shows had the largest difference in scoring with the highest vs. actual Rotten Tomatoes score?*/
+select title,
+100 as Highest_RT_Score,
+rotten_tomatoes,
+100-rotten_tomatoes as RT_Score_Diff,
+imdb
+from streaming_shows
+where rotten_tomatoes > 0 and imdb > 0
+order by RT_Score_Diff desc
+limit 10
+
+/*The film industry wants to reduce movie duration in our top markets. Which movies were over 2 hours in length that were released in the last 3 years in these markets? Sort by the longest length time (in hours) first.*/
+select show_id,
+title,
+type,
+duration,
+duration/60 as Hours,
+release_year,
+country
+from titles
+where type = 'Movie' and (country like '%United States%' and country  like '%Canada%') 
+and duration/60 > 2 
+and release_year between 2020 and 2023
+
+/*	How long has each of our customers been with us?*/
+select user_id,
+join_date,
+getdate() as Today,
+year(join_date) as Join_Year,
+year(getdate()) as This_Year,
+datediff(year,join_date,getdate() ) as Sub_Term
+from userbase
+
+/*What is the total number of hours of movie content we currently have for movies that are at least 1.5 hours in length?*/
+select cast( sum(duration/60) as decimal) as Total_Movie_Hours
+from titles
+where type = 'Movie' and duration >= 90
+
+/*What is the average movie time in hours for movies only in our top markets? Exclude documentaries.*/
+select cast( avg(duration/60) as decimal(18,2) ) as Avg_Movie_Time
+from titles
+where type = 'Movie' and (country like '%United States%' or country like '%Canada%') and listed_in not like '%Documentaries%'
+
+/*What is the highest premium monthly rate with the new 15% increase in price?*/
+select 
+max(premium_usd*1.15) as Highest_Premium_Price_Increase
+from netflix_prices
+
+/*May you also return the lowest and average premium monthly rate with this new increase?*/
+select 
+min(premium_usd*1.15) as Lowest_Premium_Price_Increase,
+avg(premium_usd*1.15) as Average_Premium_Price_Increase
+from netflix_prices
+
+/*	How many countries would have at least a $20 price point for premium plans with the new 15% price increase?*/
+Option 1 (using the Netflix_Countries table):
+select count(country) as Country_Count
+from netflix_countries
+where premium_cost_per_month*1.15 >= 20
+
+Option 2 (using the Netflix_Prices  table):
+select count(country) as Premium_Country_Count
+from netflix_prices
+where premium_usd*1.15 >= 20
+
+/*Due to the high costs in streaming licensing, we are considering purging 10% of the current library size for all countries. If we were to do this, what would be the library size for each country after the 10% purge?*/
+select country,
+no_of_tv_shows,
+no_of_movies,
+no_of_movies+no_of_tv_shows as Total_Library_by_Country,
+(no_of_movies+no_of_tv_shows)*.90 as Post_Purge
+from netflix_countries
+
+/*What is the average age for mobile device users?*/
+select avg(age)
+from userbase
+where primary_device != 'Smart TV'
+
+/*What is the average amount of volume for stocks traded in 2020?*/
+select cast( avg(volume) as decimal) as Avg_Volume
+from stock_price
+where year(trading_date) = 2020
+
+/*What’s our highest and lowest closing price in the last 5 years?*/
+select max(close) as Highest_Price,
+min(close) as Lowest_Price
+from stock_price
+where trading_date between '10/7/2018' and '10/7/2023'
+
+/*How many movies star The Rock?*/
+select count(title) as Movie_Count
+from titles
+where type = 'Movie' and "CAST" like '%Dwayne Johnson%'
+
+/*How many countries do we offer streaming services in?*/
+Option 1 (using Netflix_Countries):
+select count(country) as Country_Count
+from netflix_countries
+
+
+Option 2 (using Netflix_Prices):
+select count(country)
+from netflix_prices
+
+/*What’s the average amount of time our customers have had a subscription?*/
+select 
+avg(datediff(day,join_date,'10/15/2023')) as Avg_Sub_Length
+from userbase
+
+/*How long ago was each stock trading date in years?*/
+select trading_date,
+datediff(year,trading_date,getdate()) as Years_Since_Trade_Date
+from stock_price
+
+/*Since our company’s inception, can you provide the 20 worst performing stock days based on the close price along with the day of the week?*/
+select trading_date,
+dayname(trading_date) as Trading_Day,
+close
+from stock_price
+order by close asc
+limit 20
+
+/*All customers will be issued a price increase 3 years after their join date. May you provide a list of customers who will be issued an increase in 2024?*/
+select *,
+dateadd(year,3,join_date) as Date_of_Price_Increase
+from userbase
+where year( dateadd(year,3,join_date) ) = 2024
+
+/*When customers join Netflix, they have a 30 day free trial from the date that they joined. May you list all customers who had a 30 day free trial this year?*/
+select *,
+dateadd(day,30,join_date) as Trial_Exp_Date
+from userbase
+where dateadd(day,30,join_date) between '01/01/2023' and '12/31/2023'
+
+/*Compliance would like for us to remove our stock history data after 36 months of the stock date. Can you provide the removal date for each stock trading date?*/
+select trading_date,
+dateadd(month,36,trading_date) as Removal_Date
+from stock_price
+
+/*How many subscribers joined during March 2020?*/
+
+Option 1:
+select count(user_id) as Sub_Count
+from userbase
+where monthname(join_date) = 'Mar' and year(join_date) = 2020
+
+Option 2:
+select count(user_id) as Sub_Count
+from userbase
+where join_date between '03/01/2020' and '03/31/2020'
+
+Option 3:
+select count(user_id) as Sub_Count
+from userbase
+where month(join_date) = 3 and year(join_date) = 2020
+
+/*What is the highest, lowest, and average closing stock price?*/
+select max(close) as High_Close,
+min(close) as Low_Close, 
+avg(close) as Avg_Close
+from stock_price
+
+/*What is the average/highest/lowest monthly subscription cost, and number of customers for our non top markets for mobile users for users that joined during weekdays in March and April of 2020?*/
+select cast(  avg(monthly_revenue)  as decimal (18,2)) as Avg_MTH_Cost,
+max(monthly_revenue) as Highest_MTH_Cost,
+min(monthly_revenue) as Lowest_MTH_Cost,
+count(user_id) as Sub_Count
+from userbase
+
+/*Within our current content offering, when were the oldest and newest movies released, along with the number of movies, Julia Roberts, Brad Pitt, and Leonardo DiCaprio have starred in?*/
+select 
+max(release_year) as Newest_Movie,
+min(release_year) as Oldest_Movie,
+count(title) as Show_Count
+from titles
+where type = 'Movie' and ("CAST" like '%Julia Roberts%' or "CAST" like '%Brad Pitt%' or "CAST" like '%Leonardo DiCaprio%')
+
+/*How many TV shows are available in our non top markets?*/
+select count(title) as Show_Count
+from titles
+where type = 'TV Show' and (country not like '%Canada%' and country not like '%United States%')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
