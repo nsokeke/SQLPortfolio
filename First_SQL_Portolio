@@ -1150,6 +1150,135 @@ payment_info ON users.user_id = payment_info.user_id*/
 Answer: Return all user data specified in the select statement from the Users table along with their
 corresponding data from the Subscriptions and Payment_Info table.
 
+/*Our marketing director wants to focus on age specific target marketing for our users. May you provide her with a list of users who are only Gen Zers and non-Gen Zers? Gen Z is any user 24 and under.*/
+select user_id,
+age,
+case when age <= 24 then 'Gen Z' else 'Non Gen Z' end as Generation
+from userbase
+order by age asc
+
+/*We are launching a 90-day marketing partnership with Rotten Tomatoes and the VP of Content is inquiring about the scoring bands with Rotten Tomatoes for non-mature rated renewal dramas. I believe the scoring system is as follows:
+•	Under 60%: Rotten
+•	60% - 75%: Fresh
+•	75%+: Certified Fresh*/
+select streaming_shows.title,
+titles.title as Titles_Column,
+content_expire.exp_renewal,
+titles.listed_in,
+streaming_shows.rating,
+streaming_shows.rotten_tomatoes,
+case when rotten_tomatoes < 60 then 'Rotten' 
+     when rotten_tomatoes between 60 and 75 then 'Fresh' else 'Certified Fresh' end as RT_Score_Band
+from streaming_shows left join titles on titles.title=streaming_shows.title
+inner join content_expire on content_expire.show_id=titles.show_id
+where titles.listed_in like '%Drama%' and streaming_shows.rating != 'TV-MA'
+
+/*Just got out of a meeting with Finance. They are discussing price hikes in Latin America (roughly 7%) and non Latin American countries (roughly 14%). Can you calculate how this would impact each country’s pricing plans with these new discounts?
+The following countries make up the Latin American market:
+Argentina
+Belize
+Bolivia
+Brazil
+Chile
+Colombia
+Costa Rica
+Cuba
+Dominican Republic
+Ecuador
+El Salvador
+French Guiana 
+Guadeloupe
+Guatemala
+Guyana
+Haiti
+Honduras
+Martinique
+Mexico
+Nicaragua
+Panama
+Paraguay
+Peru
+Puerto Rico
+Saint-Barthelemy
+Suriname
+Uruguay
+Venezuela
+Saint-Martin (French part)
+Jamaica
+Saint Lucia*/
+select country, 
+CASE WHEN Country in ('Argentina','Belize','Bolivia','Brazil','Chile','Colombia','Costa Rica','Cuba','Dominican Republic','Ecuador','El Salvador','French Guiana ','Guadeloupe','Guatemala','Guyana','Haiti','Honduras','Martinique','Mexico','Nicaragua','Panama','Paraguay','Peru','Puerto Rico','Saint-Barthelemy','Suriname','Uruguay','Venezuela','Saint-Martin (French part)','Jamaica','Saint Lucia') 
+    THEN 'Latin America' ELSE 'Non Latin America' END as Country_Type,
+    
+CASE WHEN Country in ('Argentina','Belize','Bolivia','Brazil','Chile','Colombia','Costa Rica','Cuba','Dominican Republic','Ecuador','El Salvador','French Guiana ','Guadeloupe','Guatemala','Guyana','Haiti','Honduras','Martinique','Mexico','Nicaragua','Panama','Paraguay','Peru','Puerto Rico','Saint-Barthelemy','Suriname','Uruguay','Venezuela','Saint-Martin (French part)','Jamaica','Saint Lucia') 
+    THEN premium_usd * 1.07 else premium_usd * 1.14 END as New_Premium_USD,
+
+CASE WHEN Country in ('Argentina','Belize','Bolivia','Brazil','Chile','Colombia','Costa Rica','Cuba','Dominican Republic','Ecuador','El Salvador','French Guiana ','Guadeloupe','Guatemala','Guyana','Haiti','Honduras','Martinique','Mexico','Nicaragua','Panama','Paraguay','Peru','Puerto Rico','Saint-Barthelemy','Suriname','Uruguay','Venezuela','Saint-Martin (French part)','Jamaica','Saint Lucia') 
+    THEN mobile_usd * 1.07 else mobile_usd * 1.14 END as New_Mobile_USD,
+
+CASE WHEN Country in ('Argentina','Belize','Bolivia','Brazil','Chile','Colombia','Costa Rica','Cuba','Dominican Republic','Ecuador','El Salvador','French Guiana ','Guadeloupe','Guatemala','Guyana','Haiti','Honduras','Martinique','Mexico','Nicaragua','Panama','Paraguay','Peru','Puerto Rico','Saint-Barthelemy','Suriname','Uruguay','Venezuela','Saint-Martin (French part)','Jamaica','Saint Lucia') 
+    THEN standard_usd * 1.07 else standard_usd * 1.14 END as New_Standard_USD,
+
+CASE WHEN Country in ('Argentina','Belize','Bolivia','Brazil','Chile','Colombia','Costa Rica','Cuba','Dominican Republic','Ecuador','El Salvador','French Guiana ','Guadeloupe','Guatemala','Guyana','Haiti','Honduras','Martinique','Mexico','Nicaragua','Panama','Paraguay','Peru','Puerto Rico','Saint-Barthelemy','Suriname','Uruguay','Venezuela','Saint-Martin (French part)','Jamaica','Saint Lucia') 
+    THEN basic_usd * 1.07 else basic_usd * 1.14 END as New_Basic_USD,
+    
+mobile_usd, 
+basic_usd, 
+standard_usd,
+premium_usd
+from netflix_prices
+
+/*What would be the average monthly rate for each pricing plan in USD as well as the number of countries for Latin American markets?*/
+select 
+count(CASE WHEN Country in ('Argentina','Belize','Bolivia','Brazil','Chile','Colombia','Costa Rica','Cuba','Dominican Republic','Ecuador','El Salvador','French Guiana ','Guadeloupe','Guatemala','Guyana','Haiti','Honduras','Martinique','Mexico','Nicaragua','Panama','Paraguay','Peru','Puerto Rico','Saint-Barthelemy','Suriname','Uruguay','Venezuela','Saint-Martin (French part)','Jamaica','Saint Lucia') 
+    THEN 'Latin America' ELSE 'Non Latin America' END) as Country_Type,
+    
+avg(CASE WHEN Country in ('Argentina','Belize','Bolivia','Brazil','Chile','Colombia','Costa Rica','Cuba','Dominican Republic','Ecuador','El Salvador','French Guiana ','Guadeloupe','Guatemala','Guyana','Haiti','Honduras','Martinique','Mexico','Nicaragua','Panama','Paraguay','Peru','Puerto Rico','Saint-Barthelemy','Suriname','Uruguay','Venezuela','Saint-Martin (French part)','Jamaica','Saint Lucia') 
+    THEN premium_usd * 1.07 else premium_usd * 1.14 END) as New_Premium_USD,
+
+avg(CASE WHEN Country in ('Argentina','Belize','Bolivia','Brazil','Chile','Colombia','Costa Rica','Cuba','Dominican Republic','Ecuador','El Salvador','French Guiana ','Guadeloupe','Guatemala','Guyana','Haiti','Honduras','Martinique','Mexico','Nicaragua','Panama','Paraguay','Peru','Puerto Rico','Saint-Barthelemy','Suriname','Uruguay','Venezuela','Saint-Martin (French part)','Jamaica','Saint Lucia') 
+    THEN mobile_usd * 1.07 else mobile_usd * 1.14 END) as New_Mobile_USD,
+
+avg(CASE WHEN Country in ('Argentina','Belize','Bolivia','Brazil','Chile','Colombia','Costa Rica','Cuba','Dominican Republic','Ecuador','El Salvador','French Guiana ','Guadeloupe','Guatemala','Guyana','Haiti','Honduras','Martinique','Mexico','Nicaragua','Panama','Paraguay','Peru','Puerto Rico','Saint-Barthelemy','Suriname','Uruguay','Venezuela','Saint-Martin (French part)','Jamaica','Saint Lucia') 
+    THEN standard_usd * 1.07 else standard_usd * 1.14 END) as New_Standard_USD,
+
+avg(CASE WHEN Country in ('Argentina','Belize','Bolivia','Brazil','Chile','Colombia','Costa Rica','Cuba','Dominican Republic','Ecuador','El Salvador','French Guiana ','Guadeloupe','Guatemala','Guyana','Haiti','Honduras','Martinique','Mexico','Nicaragua','Panama','Paraguay','Peru','Puerto Rico','Saint-Barthelemy','Suriname','Uruguay','Venezuela','Saint-Martin (French part)','Jamaica','Saint Lucia') 
+    THEN basic_usd * 1.07 else basic_usd * 1.14 END) as New_Basic_USD
+    
+from netflix_prices
+
+where CASE WHEN Country in ('Argentina','Belize','Bolivia','Brazil','Chile','Colombia','Costa Rica','Cuba','Dominican Republic','Ecuador','El Salvador','French Guiana','Guadeloupe','Guatemala','Guyana','Haiti','Honduras','Martinique','Mexico','Nicaragua','Panama','Paraguay','Peru','Puerto Rico','Saint-Barthelemy','Suriname','Uruguay','Venezuela','Saint-Martin (French part)','Jamaica','Saint Lucia') 
+    THEN 'Latin America' ELSE 'Non Latin America' END = 'Latin America'
+
+/*Our programming team is auditing the show renewal list for our content library and feels we don’t have enough content that has been renewed to stay on Netflix longer. So, she wants to know which TV shows with at least 3 seasons that haven’t been renewed and also not rated on IMDb or Rotten Tomatoes? Please band these shows into the following:
+
+•	3 to 4 seasons: Low Consideration
+•	5 to 6 Seasons: Moderate Consideration
+•	7+ Seasons: Add to List */
+select 
+titles.show_id,
+content_expire.show_id,
+streaming_shows.rotten_tomatoes,
+streaming_shows.imdb,
+titles.title,
+titles.no_seasons,
+case when titles.no_seasons between 3 and 4 then 'Low Consideration'
+    when titles.no_seasons between 5 and 6 then 'Moderate Consideration'
+    else 'Add to List' end as Consideration_Status
+from titles left join content_expire on titles.show_id=content_expire.show_id
+left join streaming_shows on titles.title=streaming_shows.title
+where titles.no_seasons >= 3 and content_expire.show_id is null and streaming_shows.rotten_tomatoes is null and streaming_shows.imdb is null 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
