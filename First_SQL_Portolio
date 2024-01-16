@@ -1269,6 +1269,196 @@ from titles left join content_expire on titles.show_id=content_expire.show_id
 left join streaming_shows on titles.title=streaming_shows.title
 where titles.no_seasons >= 3 and content_expire.show_id is null and streaming_shows.rotten_tomatoes is null and streaming_shows.imdb is null 
 
+/*The CFO is looking to decrease basic prices by 8% in the EMEA market due to a new streaming competitor in the European market and increasing prices by 11% in the North American and Latin American markets (excluding the US) for customers that have been with us for at least 18 months. We also will allow the content size for the EMEA countries to remain the same but will increase the content size by 5% for the North American and Latin American countries in order to substantiate the price increase. Please provide the new annual revenue for each of the customers with these new prices along with the effective date of these changes, which will be 90 days from their last payment date, and the new content size for each of the countries in the EMEA, Latin American, and North American markets.
+•	United States (North American)
+•	Canada (North American)
+•	United Kingdom (EMEA)
+•	Australia (EMEA)
+•	Germany (EMEA)
+•	France (EMEA)
+•	Brazil	(Latin America)
+•	Mexico (North American)
+•	Spain	(EMEA)
+•	Italy	(EMEA)*/
+select userbase.user_id,
+userbase.subscription_type,
+userbase.join_date,
+datediff(month,userbase.join_date,getdate()) as Customer_Sub_Length,
+userbase.last_payment_date,
+dateadd(day,90,userbase.last_payment_date) as Effective_Date,
+userbase.monthly_revenue,
+userbase.country,
+case when userbase.country in ('Canada','Mexico','United States') then 'North America'
+    when userbase.country = 'Brazil' then 'Latin America'
+    else 'EMEA' end as Region,
+
+case when userbase.country in ('United States','Canada','Mexico','Brazil') then userbase.monthly_revenue*1.11
+else userbase.monthly_revenue*.92 end as New_Monthly_Pricing,
+
+case when userbase.country in ('United States','Canada','Mexico','Brazil') then userbase.monthly_revenue*1.11*12
+else userbase.monthly_revenue*.92*12 end as New_Annual_Pricing,
+
+netflix_countries.no_of_tv_shows,
+netflix_countries.no_of_movies,
+netflix_countries.no_of_tv_shows+netflix_countries.no_of_movies as Content_Size,
+case when userbase.country in ('Canada','Mexico','Brazil') then 
+(netflix_countries.no_of_tv_shows+netflix_countries.no_of_movies)*1.05
+else (netflix_countries.no_of_tv_shows+netflix_countries.no_of_movies) end as New_Content_Size
+
+from userbase join netflix_countries on userbase.country=netflix_countries.country
+
+where datediff(month,userbase.join_date,getdate()) >= 18 and userbase.subscription_type = 'Basic' and 
+userbase.country != 'United States'
+
+/*For these users you provided me, may you tell me which ones are corporate? You can usually tell by their email addresses. Any with Yahoo, Gmail, Outlook, Hotmail, Cox, and AOL are personal email addresses. All others would be considered corporate. Please retain the same data pull from the previous request I sent to you.*/
+Option 1:
+select userbase.user_id,
+sub_demo.e_dom,
+userbase.subscription_type,
+userbase.join_date,
+datediff(month,userbase.join_date,getdate()) as Customer_Sub_Length,
+userbase.last_payment_date,
+dateadd(day,90,userbase.last_payment_date) as Effective_Date,
+userbase.monthly_revenue,
+userbase.country,
+
+case when userbase.country in ('Canada','Mexico','United States') then 'North America'
+    when userbase.country = 'Brazil' then 'Latin America'
+    else 'EMEA' end as Region,
+
+case when userbase.country in ('United States','Canada','Mexico','Brazil') then userbase.monthly_revenue*1.11
+else userbase.monthly_revenue*.92 end as New_Monthly_Pricing,
+
+case when userbase.country in ('United States','Canada','Mexico','Brazil') then userbase.monthly_revenue*1.11*12
+else userbase.monthly_revenue*.92*12 end as New_Annual_Pricing,
+
+netflix_countries.no_of_tv_shows,
+netflix_countries.no_of_movies,
+
+netflix_countries.no_of_tv_shows+netflix_countries.no_of_movies as Content_Size,
+case when userbase.country in ('Canada','Mexico','Brazil') then 
+(netflix_countries.no_of_tv_shows+netflix_countries.no_of_movies)*1.05
+else (netflix_countries.no_of_tv_shows+netflix_countries.no_of_movies) end as New_Content_Size
+
+from userbase join netflix_countries on userbase.country=netflix_countries.country 
+join sub_demo on sub_demo.sub_id=userbase.user_id
+
+where datediff(month,userbase.join_date,getdate()) >= 18 and userbase.subscription_type = 'Basic' and 
+userbase.country != 'United States' and
+(sub_demo.e_dom not like '%aol%' and sub_demo.e_dom not like '%cox%' and sub_demo.e_dom not like '%yahoo%' and sub_demo.e_dom not like '%gmail%'
+and sub_demo.e_dom not like '%outlook%' and sub_demo.e_dom not like '%hotmail%')
+
+Option 2 (with Case Statement):
+select userbase.user_id,
+sub_demo.e_dom,
+userbase.subscription_type,
+userbase.join_date,
+datediff(month,userbase.join_date,getdate()) as Customer_Sub_Length,
+userbase.last_payment_date,
+dateadd(day,90,userbase.last_payment_date) as Effective_Date,
+userbase.monthly_revenue,
+userbase.country,
+
+case when userbase.country in ('Canada','Mexico','United States') then 'North America'
+    when userbase.country = 'Brazil' then 'Latin America'
+    else 'EMEA' end as Region,
+
+case when userbase.country in ('United States','Canada','Mexico','Brazil') then userbase.monthly_revenue*1.11
+else userbase.monthly_revenue*.92 end as New_Monthly_Pricing,
+
+case when userbase.country in ('United States','Canada','Mexico','Brazil') then userbase.monthly_revenue*1.11*12
+else userbase.monthly_revenue*.92*12 end as New_Annual_Pricing,
+
+netflix_countries.no_of_tv_shows,
+netflix_countries.no_of_movies,
+
+netflix_countries.no_of_tv_shows+netflix_countries.no_of_movies as Content_Size,
+case when userbase.country in ('Canada','Mexico','Brazil') then 
+(netflix_countries.no_of_tv_shows+netflix_countries.no_of_movies)*1.05
+else (netflix_countries.no_of_tv_shows+netflix_countries.no_of_movies) end as New_Content_Size,
+
+case when (sub_demo.e_dom not like '%aol%' and sub_demo.e_dom not like '%cox%' and sub_demo.e_dom not like '%yahoo%' and sub_demo.e_dom not like '%gmail%'
+and sub_demo.e_dom not like '%outlook%' and sub_demo.e_dom not like '%hotmail%') then 'Corporate' else 'Personal' end as Email_Type
+
+
+from userbase join netflix_countries on userbase.country=netflix_countries.country 
+join sub_demo on sub_demo.sub_id=userbase.user_id
+
+where datediff(month,userbase.join_date,getdate()) >= 18 and userbase.subscription_type = 'Basic' and 
+userbase.country != 'United States' and 
+case when (sub_demo.e_dom not like '%aol%' and sub_demo.e_dom not like '%cox%' and sub_demo.e_dom not like '%yahoo%' and sub_demo.e_dom not like '%gmail%'
+and sub_demo.e_dom not like '%outlook%' and sub_demo.e_dom not like '%hotmail%') then 'Corporate' else 'Personal' end = 'Corporate'
+
+/*For these users, can you let me know which are not email subscribers? We may be interested in a marketing campaign to target these users to get them added to our email list.*/
+select userbase.user_id,
+email_sub.id,
+sub_demo.e_dom,
+userbase.subscription_type,
+userbase.join_date,
+datediff(month,userbase.join_date,getdate()) as Customer_Sub_Length,
+userbase.last_payment_date,
+dateadd(day,90,userbase.last_payment_date) as Effective_Date,
+userbase.monthly_revenue,
+userbase.country,
+
+case when userbase.country in ('Canada','Mexico','United States') then 'North America'
+    when userbase.country = 'Brazil' then 'Latin America'
+    else 'EMEA' end as Region,
+
+case when userbase.country in ('United States','Canada','Mexico','Brazil') then userbase.monthly_revenue*1.11
+else userbase.monthly_revenue*.92 end as New_Monthly_Pricing,
+
+case when userbase.country in ('United States','Canada','Mexico','Brazil') then userbase.monthly_revenue*1.11*12
+else userbase.monthly_revenue*.92*12 end as New_Annual_Pricing,
+
+netflix_countries.no_of_tv_shows,
+netflix_countries.no_of_movies,
+
+netflix_countries.no_of_tv_shows+netflix_countries.no_of_movies as Content_Size,
+case when userbase.country in ('Canada','Mexico','Brazil') then 
+(netflix_countries.no_of_tv_shows+netflix_countries.no_of_movies)*1.05
+else (netflix_countries.no_of_tv_shows+netflix_countries.no_of_movies) end as New_Content_Size,
+
+case when (sub_demo.e_dom not like '%aol%' and sub_demo.e_dom not like '%cox%' and sub_demo.e_dom not like '%yahoo%' and sub_demo.e_dom not like '%gmail%'
+and sub_demo.e_dom not like '%outlook%' and sub_demo.e_dom not like '%hotmail%') then 'Corporate' else 'Personal' end as Email_Type
+
+
+from userbase join netflix_countries on userbase.country=netflix_countries.country 
+join sub_demo on sub_demo.sub_id=userbase.user_id
+left join email_sub on email_sub.id=userbase.user_id
+
+where datediff(month,userbase.join_date,getdate()) >= 18 and userbase.subscription_type = 'Basic' and 
+userbase.country != 'United States' and 
+case when (sub_demo.e_dom not like '%aol%' and sub_demo.e_dom not like '%cox%' and sub_demo.e_dom not like '%yahoo%' and sub_demo.e_dom not like '%gmail%'
+and sub_demo.e_dom not like '%outlook%' and sub_demo.e_dom not like '%hotmail%') then 'Corporate' else 'Personal' end = 'Corporate'
+and email_sub.id is null
+
+/*Please provide how many of these subscribers there are, the average new monthly revenue, the new total annual revenue, and the content size for EMEA subscribers.*/
+select count(userbase.user_id) as Sub_Count,
+
+
+avg(case when userbase.country in ('United States','Canada','Mexico','Brazil') then userbase.monthly_revenue*1.11
+else userbase.monthly_revenue*.92 end) as Average_New_Monthly_Pricing,
+
+sum(case when userbase.country in ('United States','Canada','Mexico','Brazil') then userbase.monthly_revenue*1.11*12
+else userbase.monthly_revenue*.92*12 end) as Total_New_Annual_Pricing,
+
+sum(case when userbase.country in ('Canada','Mexico','Brazil') then 
+(netflix_countries.no_of_tv_shows+netflix_countries.no_of_movies)*1.05
+else (netflix_countries.no_of_tv_shows+netflix_countries.no_of_movies) end) as Total_New_Content_Size
+
+
+from userbase join netflix_countries on userbase.country=netflix_countries.country 
+join sub_demo on sub_demo.sub_id=userbase.user_id
+left join email_sub on email_sub.id=userbase.user_id
+
+where datediff(month,userbase.join_date,getdate()) >= 18 and userbase.subscription_type = 'Basic' and 
+userbase.country not in ('Mexico','Canada','Brazil','United States') and 
+(sub_demo.e_dom not like '%aol%' and sub_demo.e_dom not like '%cox%' and sub_demo.e_dom not like '%yahoo%' and sub_demo.e_dom not like '%gmail%'
+and sub_demo.e_dom not like '%outlook%' and sub_demo.e_dom not like '%hotmail%') 
+and email_sub.id is null 
+
+
 
 
 
