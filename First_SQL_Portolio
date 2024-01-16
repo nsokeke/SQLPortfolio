@@ -734,6 +734,124 @@ select count(title) as Show_Count
 from titles
 where type = 'TV Show' and (country not like '%Canada%' and country not like '%United States%')
 
+/*Which countries are in both the Countries and Prices table?*/
+select netflix_countries.country as NCCountry,
+netflix_prices.country as NPCountry
+from netflix_countries inner join netflix_prices on netflix_countries.country=netflix_prices.country
+
+/*Which countries are in the Prices table but not the Countries table?*/
+select 
+netflix_prices.country as NPCountry,
+netflix_countries.country as NCCountry
+from netflix_prices left join netflix_countries on netflix_countries.country=netflix_prices.country
+where netflix_countries.country is null
+
+/*Which countries are in the Countries table but not the Prices table*/
+LEFT JOIN
+select netflix_countries.country as NCCountries,
+netflix_prices.country as NPCountries
+from netflix_countries left join netflix_prices on netflix_countries.country=netflix_prices.country
+where netflix_prices.country is null
+RIGHT JOIN
+select netflix_countries.country as NCCountry,
+netflix_prices.country as Prices_Country
+from netflix_prices right join netflix_countries on netflix_countries.country=netflix_prices.country
+where netflix_prices.country is null
+FULL JOIN
+select netflix_countries.country as NCCountry,
+netflix_prices.country as Prices_Country
+from netflix_prices full join netflix_countries on netflix_countries.country=netflix_prices.country
+where netflix_countries.country is not null and netflix_prices.country is null
+
+/*Which stock dates are included in both the History and the Stock Prices table? Be sure to include the month’s name, quarter, and day of the week for each of the stock dates. Also, calculate how long ago the stock trading date was in days.*/
+select history_stock.trading_date,
+monthname(history_stock.trading_date) as Stock_Month,
+dayname(history_stock.trading_date) as Stock_Month,
+quarter(history_stock.trading_date) as Stock_Month,
+year(history_stock.trading_date) as Stock_Month,
+datediff(day,history_stock.trading_date,getdate()) as Days_Since
+from history_stock join stock_price on history_stock.trading_date=stock_price.trading_date
+
+/*Which stock dates from the History Stock table are not currently included in our Stock Prices table?*/
+select history_stock.trading_date as History_StockDate,
+stock_price.trading_date as SP_Stock_Date
+from history_stock left join stock_price on history_stock.trading_date=stock_price.trading_date
+where stock_price.trading_date is null
+
+/*Please provide the rating description for ratings in the Titles table.*/
+select titles.title,
+titles.rating,
+ratings.ratinglevel
+from titles inner join ratings on ratings.rating=titles.rating
+
+/*Which titles do not have ratings descriptions?*/
+select titles.title,
+ratings.ratinglevel 
+from ratings right join titles on titles.rating=ratings.rating
+where ratinglevel is null
+
+/*Which premium subscribers are not email subscribers?*/
+select userbase.user_id,
+email_sub.id as SubID
+from userbase left join email_sub on email_sub.id=userbase.user_id
+where userbase.subscription_type = 'Premium' and email_sub.id is null
+
+/*How many of our subscribers are not email subscribers?*/
+select count(userbase.user_id) as NonSub_Count
+from userbase left join email_sub on email_sub.id=userbase.user_id
+where email_sub.id is null
+
+/* Include all userbase data for our Gmail subscribers (not Gmail email subscribers, only Gmail domain accounts), along with their first names and last names.*/
+INNER JOIN:
+select userbase.*,
+sub_demo.e_dom,
+sub_demo.sub_fname,
+sub_demo.sub_lname
+from userbase inner join sub_demo on sub_demo.sub_id=userbase.user_id
+where sub_demo.e_dom = '@gmail.com'
+
+FULL JOIN:
+select userbase.*,
+sub_demo.e_dom,
+sub_demo.sub_fname,
+sub_demo.sub_lname
+from userbase full join sub_demo on sub_demo.sub_id=userbase.user_id
+where sub_demo.e_dom = '@gmail.com'
+
+/*Provide the age, subscription type, and primary device used for all of our email subscribers*/
+select email_sub.id as SubID,
+userbase.age,
+userbase.subscription_type,
+userbase.primary_device
+from email_sub left join userbase on email_sub.id=userbase.user_id
+
+INNER JOIN
+select email_sub.id,
+userbase.age,
+userbase.subscription_type,
+userbase.primary_device
+from userbase inner join email_sub on email_sub.id=userbase.user_id
+
+/*Which movies have been renewed to stay on Netflix longer? Hint: The Content_Expire table lists all titles whose titles have been renewed to stay longer on Netflix. */
+select titles.title,
+content_expire.exp_renewal
+from titles inner join content_expire on titles.show_id=content_expire.show_id
+where type = 'Movie'
+
+/*Which non-premium subscribers are also email subscribers? */
+select userbase.user_id as UBID,
+email_sub.id as SubID,
+userbase.subscription_type
+from userbase inner join email_sub on email_sub.id=userbase.user_id
+where userbase.subscription_type != 'Premium'
+
+/* Please provide all userbase data for non-AMEX subscribers*/
+select userbase.*,
+cof.cof_type
+from userbase inner join cof on cof.cc_id=userbase.user_id
+where cof.cof_type != 'AMEX'
+
+
 
 
 
