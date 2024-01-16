@@ -962,7 +962,193 @@ from sub_demo left join email_sub on email_sub.id=sub_demo.sub_id
 inner join userbase on userbase.user_id=sub_demo.sub_id
 where email_sub.id is null and sub_demo.e_dom like '%.org%' and datediff(month,join_date,getdate()) >= 12
 
-/*
+/*Return the following information for wholesale candles purchased at malls and outlets for
+customers who have been with us for at least 1 year (Do not include candles that have been returned;
+Returned items have a negative quantity):
+· Client name
+· Onboard date
+· Onboard year
+· How long the client has been a customer
+· Transaction number
+· Transaction date
+· Transaction day of the week
+· Transaction month
+· Transaction quarter
+· Transaction year
+· Customer ID number
+· Location
+· Quantity
+· Price
+· Transaction amount including the wholesale discount
+· Invoice due date (Transaction date + net terms)
+· Month of invoice due date
+· Year of invoice due date*/
+Answer 1: No Results
+select
+shopping_mall.description,
+customer_name.client,
+customer_name.onboard_date,
+year(customer_name.onboard_date) as Onboard_Year,
+datediff(year,onboard_date,getdate()) as Customer_Term,
+shopping_mall.invoice_no,
+shopping_mall.transaction_date,
+dayname(shopping_mall.transaction_date) as Transaction_Day,
+monthname(shopping_mall.transaction_date) as Transaction_Month,
+quarter(shopping_mall.transaction_date) as Transaction_Quarter,
+year(shopping_mall.transaction_date) as Transaction_Year,
+customer_name.customerid,
+shopping_mall.shopping_mall as Location,
+shopping_mall.quantity,
+shopping_mall.price,
+(shopping_mall.price*shopping_mall.quantity)*(1-wholesale_discount.discount) as Transaction_Amount,
+dateadd(day,online_invoice.net_terms,shopping_mall.transaction_date) as Invoice_Due_Date,
+monthname(dateadd(day,online_invoice.net_terms,shopping_mall.transaction_date)) as Invoice_Due_Month,
+Year(dateadd(day,online_invoice.net_terms,shopping_mall.transaction_date)) as Invoice_Due_Year
+from shopping_mall inner join customer_name on shopping_mall.customer_id=customer_name.customerid
+inner join online_invoice on online_invoice.invoice=shopping_mall.invoice_no
+inner join wholesale_discount on wholesale_discount.item_name=shopping_mall.description
+where customer_name.wholesale_account = 'Y' and
+(shopping_mall.shopping_mall like '%Outlet%' or shopping_mall.shopping_mall like '%Mall%')
+and shopping_mall.quantity >-1 and datediff(year,onboard_date,getdate()) >=1
+and shopping_mall.description like '%CANDLE%'
+
+/*Return the following for non-wholesale transactions that did not take place at malls or outlets for
+clients who onboarded this year:
+· Total revenue
+· Average transaction (Round to two decimal places)
+Most expensive transaction
+· Cheapest transaction
+· Number of transactions*/
+Answer 1: No Results
+select
+sum((shopping_mall.price*shopping_mall.quantity)) as Total_Revenue,
+cast(avg((shopping_mall.price*shopping_mall.quantity)) as decimal(18,2)) as Average_Transaction,
+min((shopping_mall.price*shopping_mall.quantity)) as Cheapest_Transaction,
+count(shopping_mall.invoice_no) as Transaction_Count
+from shopping_mall left join customer_name on shopping_mall.customer_id=customer_name.customerid
+where customer_name.wholesale_account = 'N' and
+(shopping_mall.shopping_mall not like '%Outlet%' and shopping_mall.shopping_mall not like '%Mall%') and
+year(customer_name.onboard_date) = 2023
+
+/*What Does This Query Say?CREATE TABLE customers (
+customer_id INT,
+first_name VARCHAR(50),
+last_name VARCHAR(50),
+city VARCHAR(50)
+);
+CREATE TABLE orders (
+order_id INT,
+customer_id INT,
+order_date DATE,
+total_amount DECIMAL(10, 2),
+FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
+);
+CREATE TABLE products (
+product_id INT,
+product_name VARCHAR(100),
+category VARCHAR(50)
+);
+INSERT INTO customers (customer_id, first_name, last_name, city)
+VALUES
+(1, 'John', 'Doe', 'New York'),
+(2, 'Jane', 'Smith', 'Los Angeles'),
+(3, 'Michael', 'Johnson', 'Chicago');
+INSERT INTO orders (order_id, customer_id, order_date, total_amount)
+VALUES
+(101, 1, '2023-09-20', 150.00),
+(102, 2, '2023-09-21', 200.50),
+(103, 1, '2023-09-22', 100.75),
+(104, 3, '2023-09-23', 300.20);
+INSERT INTO products (product_id, product_name, category)
+VALUES
+(501, 'Laptop', 'Electronics'),
+(502, 'Smartphone', 'Electronics'),
+(503, 'T-Shirt', 'Apparel'),
+(504, 'Shoes', 'Apparel');*/
+Answer: This query states to create three tables: Customers, Orders, and Products. Within these three
+tables, the respective data and data types are to be inserted into the designated fields into these tables.
+
+/*What Does This Query Say?SELECT
+customers.first_name,
+customers.last_name,
+orders.order_id,
+orders.order_date,
+cast(orders.total_amount as decimal)
+FROM customers RIGHT JOIN orders ON customers.customer_id = orders.customer_id*/
+Answer: This query states to return all customers’ first and last names, along with their order number order
+date, and order amount (formatted as a whole number with no decimal places) from the Order table and
+any corresponding information from the Customers table.
+
+/*What Does This Query Say?
+SELECT
+residentID,
+residentfirst,
+residentlast,
+census_date_taken,
+region,
+year(census_date_taken),
+population_count,
+population_count*1.03,
+population_count*.03,
+DATEADD(year, 1, GETDATE()) as Census_Release_Year
+FROM population_data*/
+Answer: This query states to return the following:
+• resident’s ID
+• resident’s name
+• Census date
+• Region the resident is located in
+• Year of the census date
+• Population count
+• Population count with a 3% increase added to it
+• The amount of the 3% population
+• Census release date, which is one year from the census date
+
+/*What Does This Query Say?
+SELECT
+customers.first_name,
+customers.last_name,
+orders.order_id,
+orders.order_date,
+products.product_name,
+orders.total_amount
+FROM
+customers
+INNER JOIN
+orders ON customers.customer_id = orders.customer_id
+INNER JOIN
+products ON orders.product_id = products.product_id
+WHERE
+customers.city = 'New York'
+AND orders.order_date BETWEEN '2023-09-20' AND '2023-09-23'
+AND (products.category not like '%Electronics%' and products.category not like '%Accessories%')
+ORDER BY orders.total_amount DESC
+LIMIT 10*/
+Return the 10 highest order totals along with the customers’ names, order date, products they purchased, and the
+order amount for customers located in New York who purchased their orders between September 20th and September
+23rd, 2023 for products that were not electronics or accessories bot only for customers that are present in all three tables.
+
+/*What Does This Query Say?
+SELECT
+users.user_id,
+users.first_name,
+users.last_name,
+users.email,
+subscriptions.subscription_type,
+subscriptions.start_date,
+subscriptions.end_date,
+movies.title,
+movies.genre,
+movies.release_date,
+payment_info.payment_method,
+payment_info.card_number
+FROM
+users
+LEFT JOIN
+subscriptions ON users.user_id = subscriptions.user_id
+LEFT JOIN
+payment_info ON users.user_id = payment_info.user_id*/
+Answer: Return all user data specified in the select statement from the Users table along with their
+corresponding data from the Subscriptions and Payment_Info table.
 
 
 
