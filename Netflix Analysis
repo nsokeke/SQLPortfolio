@@ -1,0 +1,240 @@
+/*Our content engagement team is looking into adding an option for our subscribers to start selecting which content to watch based on their IMDb scores. May you return a list of titles based on their imdB scores? Sort the scores from highest to lowest.*/
+select title,
+imdb
+from streaming_shows
+order by imdb desc
+
+/*Sorry about this……this will need to be censored based on age restrictions. So, may you also add in the appropriate viewing audience age as well? We will now need this to be sorted by age from the youngest age viewing allowance to the oldest, then by the IMDb scores from highest to lowest. Thanks!*/
+select title,
+imdb,
+rating
+from streaming_shows
+order by rating asc, imdb desc
+
+/*We now need the same information for Rotten Tomatoes as well but instead of the age, we will need the following: Content titles, their year of release, and their Rotten Tomatoes score. Sort by the year of release from newest to oldest and their Rotten Tomatoes score from smallest to largest.*/ 
+select title,
+year,
+rotten_tomatoes
+from streaming_shows
+order by year desc, rotten_tomatoes asc
+
+/*Finance needs a list of our mobile and non-basic plans pricing for each country prior to the end of the day. We want to see the countries with the cheapest premium plans listed first.*/
+select country,
+code,
+mobile_usd,
+standard_usd,
+premium_usd
+from netflix_prices
+order by premium_usd asc
+
+/*Finance needs a list of our mobile and non-basic plans pricing for each country prior to the end of the day. We want to see the countries with the cheapest premium plans listed first.*/
+select country,
+code,
+mobile_usd,
+standard_usd,
+premium_usd
+from netflix_prices
+order by premium_usd asc
+
+/*The content strategy team needs a list of all tv shows on Netflix with at least a 7.0 score on IMDb and at least a 75 Rotten Tomatoes score for shows released after our inception. Sort by the score from largest to smallest, then by the title name from A to Z.*/
+select title,
+netflix,
+imdb,
+rotten_tomatoes,
+year
+from streaming_shows
+where netflix = '1' and imdb >= 7.0 and rotten_tomatoes >= 75 and year > 1997
+order by rotten_tomatoes desc, title asc
+
+/*Actually, they need a list of all tv shows that are on all streaming platforms (excluding Disney+ as this is an available add on with Hulu) with this same information as #1.*/
+select 
+title,
+netflix,
+hulu,
+prime_video
+imdb,
+rotten_tomatoes,
+year
+from streaming_shows
+where netflix = '1' and hulu = '1' and prime_video = '1' and imdb >= 7.0 and rotten_tomatoes >= 75 and year > 1997
+order by rotten_tomatoes desc, title asc
+
+/*Just got back from a meeting with the content department. Unfortunately, their data analyst is out on leave, and they are in need of data pulls. May you provide them with the following at your earliest convenience:
+ Provide a list of all movies released in Central America within the last 10 years. (S)
+A list of all titles that were released after 2019. The director is a stickler for reviewing this information in a certain order to make it easier for him to digest. With this being said, please be sure to sort by title from A to Z.*/
+select title,
+release_year
+from titles
+where release_year > 2019 
+order by 1 asc
+
+/*Titles that were released during the pandemic. Again, refer to what I stated about the content director’s preference.*/
+select title,
+release_year
+from titles
+where release_year = 2020
+order by 1 asc
+
+/*10 non-reality TV shows that had the longest run*/
+select title,
+no_seasons
+from titles
+where type = 'TV Show' and listed_in not like '%Reality%'
+order by no_seasons desc
+limit 10
+
+/*25 longest movies outside of our top markets released prior to the pandemic*/
+select type,
+title,
+country,
+release_year,
+duration
+from titles
+where release_year < 2020 and (country not like '%United States%' and country not like '%Canada%')
+and type = 'Movie'
+order by duration desc 
+limit 25
+
+/*Just spoke with Jim from the Subscriber Finance team, and he is doing some analysis on our subscription payments. I provided him with some potential data points he would need in order to get what he is looking for. I need your assistance in providing him with the following:
+Which premium users have a non-mobile plan?*/
+select user_id
+from userbase
+where subscription_type = 'Premium' and primary_device = 'Smart TV'
+
+/*List of millennial users in our top market that joined in the last year whose monthly subscription is at least $14.99 per month. Sort by the country from A to Z, then by the join date from newest to oldest if you may.*/
+select 
+user_id,
+monthly_revenue,
+join_date,
+age,
+country
+from userbase
+where age between 25 and 34 and country in ('United States','Canada') and
+join_date between '10/01/2022' and '09/30/2023' and monthly_revenue >= 14.99
+
+/*Users whose last payments were made on weekends. This is becoming an issue with our bank due to the processing delay we experience with these payments vs. weekday payments.*/
+select user_id,
+last_payment_date,
+dayname(last_payment_date)
+from userbase
+where dayname(last_payment_date) in ('Sat','Sun')
+
+/*All users who have made payments since the onset of the writers strike in May.*/
+select user_id,
+last_payment_date
+from userbase
+where last_payment_date >= '05/01/2023'
+
+/*All users who joined the quarter after the start of the pandemic*/
+select user_id,
+join_date,
+monthname(join_date) as Join_Month,
+year(join_date) as Join_Year
+from userbase
+where monthname(join_date) in ('Apr','May','Jun') and year(join_date) = 2020
+
+/*All users, along with their user data, that are not located in our largest markets that joined in the last year.*/
+select *
+from userbase
+where country not in ('United States','Canada') and join_date between '10/1/2022' and '10/1/2023'
+
+/*All users who joined in the months after the start of the pandemic during 2020 in our top markets on mobile devices.*/
+You can not pull due to 2020 data not being in the table.
+
+/*All users who joined on weekdays*/
+select user_id,
+last_payment_date,
+dayname(last_payment_date) as Payment_Day
+from userbase
+where dayname(last_payment_date) not in ('Sat','Sun')
+
+/*The talent team is in talks with a few A-list celebrities to sign multi-year contracts for Netflix-produced films. Currently, they are meeting with Kevin Hart’s and J Lo’s team and need the following:
+List of all titles that star Kevin Hart. Sort the titles by year of release please */
+select 
+title,
+release_year,
+"CAST"
+from titles
+where "CAST" like '%Kevin Hart%'
+order by 2 asc
+
+/*US-only released movies that starred J.Lo*/
+select 
+title,
+"CAST",
+country
+from titles
+where "CAST" like '%Jennifer Lopez%'
+
+/*List of directors as the directors Kevin and Jennifer will work with will be contingent on their contracts.*/
+select 
+director
+from titles
+
+/*We are meeting with Nielsen next week in regard to ratings regulations. Can you pull the following information prior to our meeting:
+Which shows are appropriate for adults only? */
+select title,
+rating
+from titles
+where type = 'TV Show' and rating in ('TV-MA','TV-PG','R')
+
+/*Which directors have PG-13 movies that were released in the last 3 years?*/
+select Director,
+title,
+Type,
+Rating,
+Release_Year
+from titles
+where type = 'Movie' and rating = 'PG-13' and release_year between 2020 and 2023
+
+/*Can you pull the 5 best days for Netflix’s stock that took place after COVID for our IR team?*/
+select trading_date,
+close 
+from stock_price
+where trading_date >= '04/01/2020'
+order by close desc
+limit 5
+
+/*May you return all patient data? Be sure to sort the data by last name from A to Z, then by first name from A to Z */
+select *
+from patient_services_demographics
+order by first_name asc, last_name asc
+
+/*Which Boomer aged patients received meal related services? Boomers are patients that are at least 57 years old */
+select first_name,
+last_name,
+patient_id_no,
+servicename
+from patient_services_demographics
+where age >= 57 and servicename like '%Meals%'
+
+/*Return a list of the 25 employees with the lowest hourly rate in any non support
+departments (Support Departments: HR, Marketing, and Sales) who reside in the tri-state area:
+Connecticut, New Jersey, and New York who have been employed with the company for at least
+6 months */
+select employee_id,
+emplfirst,
+empllast,
+HOURLY_RATE,
+department,
+state,
+hire_date,
+datediff(month,hire_date,getdate()) as Hire_Term
+from employee_demographics
+where department not in ('HR','Marketing','Sales') and state in ('NY','NJ','CT') and
+datediff(month,hire_date,getdate()) >= 6
+order by hourly_rate asc
+limit 25
+
+/*Provide us with the 10 highest approved claim amounts for claims that were processed in Q1 2022*/
+select first_name,
+last_name,
+patient_id_no,
+quarter(date_of_claim) as Quarter_Number,
+year(date_of_Claim) as Year,
+date_of_claim,
+amount
+from patient_services_demographics
+where claim_status = 'Approved' and quarter(date_of_claim) = 1 and year(date_of_claim) = 2022
+order by amount desc
+limit 10
