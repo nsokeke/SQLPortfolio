@@ -1,0 +1,367 @@
+/*May you return all patient data? Be sure to sort the data by last name from A to Z, then by first name from A to Z */
+select *
+from patient_services_demographics
+order by first_name asc, last_name asc
+
+/*Which Boomer aged patients received meal related services? Boomers are patients that are at least 57 years old */
+select first_name,
+last_name,
+patient_id_no,
+servicename
+from patient_services_demographics
+where age >= 57 and servicename like '%Meals%'
+
+/*Return a list of the 25 employees with the lowest hourly rate in any non support
+departments (Support Departments: HR, Marketing, and Sales) who reside in the tri-state area:
+Connecticut, New Jersey, and New York who have been employed with the company for at least
+6 months */
+select employee_id,
+emplfirst,
+empllast,
+HOURLY_RATE,
+department,
+state,
+hire_date,
+datediff(month,hire_date,getdate()) as Hire_Term
+from employee_demographics
+where department not in ('HR','Marketing','Sales') and state in ('NY','NJ','CT') and
+datediff(month,hire_date,getdate()) >= 6
+order by hourly_rate asc
+limit 25
+
+/*Provide us with the 10 highest approved claim amounts for claims that were processed in Q1 2022*/
+select first_name,
+last_name,
+patient_id_no,
+quarter(date_of_claim) as Quarter_Number,
+year(date_of_Claim) as Year,
+date_of_claim,
+amount
+from patient_services_demographics
+where claim_status = 'Approved' and quarter(date_of_claim) = 1 and year(date_of_claim) = 2022
+order by amount desc
+limit 10
+
+/*The Director of Patient Services of the West Coast Division (California, Nevada, Arizona,
+Oregon, Washington, New Mexico, and Texas) is looking for patients in her division who are
+senior citizens (66 and older) whose claims took place between Q1 2020 and 2023, at least
+$100 and currently in pending status. She needs this information for any patients who have
+received any community or transportation named services. She does want to review this
+information for patients who are oldest first. */
+select first_name,
+last_name,
+PATIENT_ID_NO,
+Age,
+State,
+DATE_OF_CLAIM,
+year(date_of_claim) as Year_Of_Claim, quarter(date_of_claim) as Quarter_Claim, SERVICENAME,
+CLAIM_STATUS,
+AMOUNT
+from patient_services_demographics
+where age >= 66 and state in ('CA','NV','AR','OR','WA','NM','TX') and
+quarter(date_of_claim) = 1 and
+year(date_of_claim) between 2020 and 2023 and amount >= 100 and claim_status = 'Pending' and
+(servicename like ‘%community%’ or servicename like ‘%transportation%’)
+order by age desc
+
+/*The CEO is in need of all employees who were hired in Q1 of this year that are in non
+support departments (HR and Sales are support departments) who reside in the tri state area
+(NY, CT, NJ) who make at least $75/hr and who participates in our benefits (401K and
+Healthcare). Sort by the department from A to Z, then by the salary from largest to smallest.*/
+select employee_id,
+emplfirst,
+empllast,
+state,
+department,
+hire_date,
+quarter(hire_date) as Quarter_of_Year,
+year(hire_date) as Year,
+hourly_rate,
+hourly_rate*2080 as Salary,
+company_match_ytd,
+health_insurance_prem
+from employee_demographics
+where
+quarter(hire_date) = 1 and
+year(hire_date) = 1 and
+department not in ('HR','Sales') and
+state in ('NY','CT','NJ') and
+hourly_rate >= 75 and
+company_match > 0 and health_insurance_prem > 0
+order by department asc, salary desc
+
+/*Which employees were hired this current year?*/
+select employee_id,
+emplfirst,
+empllast,
+hire_date,
+year(hire_date) as Hire_Year
+from employee_demographics
+where year(hire_date) = 2023
+
+/*Which patients received community and transportation services in June 2022 that had
+claims with a 1000 code?*/
+select first_name,
+LAST_NAME,
+PATIENT_ID_NO,
+service_delivery_date,
+monthname(service_delivery_date) as Service_Month,
+year(service_delivery_date) as Service_Year,
+servicecode,
+servicename
+from patient_services_demographics
+where servicecode like '%1000%' and monthname(service_delivery_date) = 'Jun' and servicename in
+('Community Support Services','Medical Transportation') and year(service_delivery_date) = 2022
+
+/*Which patients have themselves or social workers listed as their emergency contacts?*/
+select first_name,
+last_name,
+patient_id_no,
+emergency_contact_relationship
+from patient_services_demographics
+where emergency_contact_relationship like '%social worker%' or emergency_contact_relationship like
+'%self%’ or emergency_contact_relationship like '%Self%’
+
+/*Can you provide us with a list of the top 10 highest paid employees in the Engineering department?*/
+select employee_id,
+emplfirst,
+empllast,
+department,
+hourly_rate
+from employee_demographics
+where department = 'Engineering'
+order by hourly_rate desc
+limit 10
+
+/*Return a list of all departments in our company (non-duplicated).*/
+select distinct department
+from employee_demographics
+
+/*Return a list of patients who had their services provided more than 3 days after the claim date. Be sure to exclude any patients who reported their claim on a weekend date.*/
+select first_name,
+last_name,
+patient_id_no,
+date_of_claim,
+dayname(date_of_claim) as Name_Of_Day,
+service_delivery_date,
+datediff(day,date_of_claim,service_delivery_date) as Turntime
+from patient_services_demographics
+where dayname(date_of_claim) not in ('Sun','Sat') and datediff(day,date_of_claim,service_delivery_date) > 3
+
+/*In the text box below, please write what the query below says. Be sure to use layman's terms.
+SELECT
+First_Name,
+Last_Name,
+Patient_ID_No,
+Age,
+City,
+State,
+Emergency_Contact_First,
+Emergency_Contact_Last,
+Emergency_Contact_Relationship,
+Date_of_Visit,
+Monthname(Date_of_Visit),
+Dayname(Date_of_Visit),
+Year(Date_of_Visit),
+Quarter(Date_of_Visit),
+Claim_Date,
+Vendor,
+ServiceCode,
+ServiceName,
+Claim_Status,
+Claim_Amount,
+Claim_Amount+3.95 as Claim_Fee
+FROM PatientServicesDemographics
+WHERE Age between 65 and 75
+AND City in (‘New York’,’Los Angeles’,’Miami’,’Atlanta’,’Chicago’)
+AND Vendor not in (‘Avant’,’Romino Services’,’Rupert Transpo’)
+AND Claim_Amount
+AND monthname(Claim_Date) in (‘Jan’,’Feb’,’Mar’,’Apr’,’May’,’Jun’)
+AND (ServiceName not like ‘%community%’ and ServiceName not like ‘%transportation%’)
+AND Emergency_Contact_Relationship in (‘child’,’self’,’spouse’)
+AND year(Claim_Date) >= 2019
+AND dayname(Date_of_visit) in (‘Mon’,’Tue’,’Wed’,’Thu’,’Fri’)
+ORDER BY Claim_Amount asc
+LIMIT 20 */
+This query states to pull the following information from the PatientServicesDemographics table for 20
+patients with the lowest claim amount: patients' personal contact information, along with the emergency
+contact information, date/month/year of visits, vendors the patients have received services from, claim
+date, service code, service name, status of claim, claim amount, and the claim amount with a $3.95 added
+for patients based on the following patient parameters:
+- Aged between 65 and 75
+- Reside in NY, LA, Miami, Atlanta, or Chicago
+- Did not receive community or transportation-based services from vendors Avant, Romino Services, and
+Rupert Transpo
+- Claims that took place on weekdays during January through June of 2019 through 2023
+- Have self, their spouse, or their child/children as their emergency contact
+
+/*In the text box below, please provide a list of all of the errors you see in the query below:
+SELECT
+First_Name
+,Last_Name
+,Patient_ID_No
+Age,
+City
+State,
+Date_of_Visit,
+Claim_Date,
+Monthname(Claim_Date,
+Year(Claim_Date),Vendor,
+ServiceCode,
+ServiceName,
+Claim_Status,
+Claim_Amount
+FROM PatientServicesDemographics
+WHERE State in NY,CA,FL,GA,IL,TX
+AND ClaimAmount between 500 and 1000
+Vendor != ABC Services
+ORDER State des
+ORDER BY City asc*/
+Here are the errors present in the query:
+- Missing comma between patient ID and age columns
+- Missing comma between city and state columns
+- Missing closed parentheses after the Monthname(Claim_Date column
+- Missing open and closed parentheses after around the records in the state filter, along with apostrophes
+around each text (WHERE State in 'NY','CA','FL','GA','IL','TX')
+- ClaimAmount column should be Claim_Amount in the WHERE statement
+- ABC Services record in the Vendor filter is missing apostrophes
+- The desc order in the ORDER BY is spelled incorrectly. Should be desc vs. desc
+- Should be only one ORDER BY
+(ORDER BY State desc, City asc)
+
+/*Our SVP of HR wants to give everyone a 10% COLA (cost of living adjustment). Can you please provide me with the following for each employee:
+Current salary
+New salary with the 10% COLA increase
+The amount of the 10% COLA*/
+select emplfirst,
+empllast,
+hourly_rate,
+hourly_rate * 2080 as Salary,
+(hourly_rate * 2080) * .10 as COLA,
+hourly_rate * 2080 * 1.10 as New_Salary_with_COLA
+from employee_demographics
+
+/*Calculate the salary for each employee. Hint: To calculate the salary from an hourly rate, you would
+calculate the following: hourly rate * 2080 hours. 2080 hours are the number of hours employees work
+in a year. */
+select employee_id,
+emplfirst,
+empllast,
+hourly_rate,
+hourly_rate*2080 as Employee_Salary
+from employee_demographics
+
+/*Which 10 employees are paid the most? Be sure to also include the following for these 10
+employees:
+Current salary
+New salary with the 10% COLA increase
+The amount of the 10% COLA*/
+select emplfirst,
+empllast,
+hourly_rate,
+hourly_rate * 2080 as Salary,
+(hourly_rate * 2080) * .10 as COLA,
+hourly_rate * 2080 * 1.10 as New_Salary_with_COLA
+from employee_demographics
+order by Salary desc
+limit 10
+
+/*Please apply a 10% claims processing fee to all non-approved claims. Any claims processing fee
+that is $3 or less can be disregarded.*/
+SELECT *,
+Amount*1.10 as Claim_with_Fee,
+Amount*.10 as Claim_Fee
+FROM patient_services_demographics
+WHERE CLAIM_STATUS !='Approved' and amount*.10 >3
+
+/*Calculate the following: Average annual salary, Maximum annual salary, Minimum annual salary, Number of employees*/
+select Max(2080*hourly_rate) as Highest_Annual_Salary,
+Min(2080*hourly_rate) as Lowest_Annual_Salary,
+Avg(2080*hourly_rate) as Average_Annual_Salary,
+Count(Employee_id) as Number_of_employees
+from employee_demographics
+
+/*What is the average claim amount for patients who reside in high cost of living areas (New York and California)?*/
+select avg(amount) as Avg_Claim_Amount
+from patient_services_demographics
+where state in ('NY','CA')
+
+/*What is the average claim amount for services that were delivered on the same day as the claim?*/
+select avg(amount) as Average_Claim_Amount
+from patient_services_demographics
+where date_of_claim=service_delivery_date
+
+/* What is the average annual salary for direct hires in supporting departments (HR, Sales, and Marketing)*/
+select avg(hourly_rate*2080) as Average_Annual_Salary
+from employee_demographics
+where fte_type = 'Direct' and department in ('HR','Sales','Marketing')
+
+/* May you provide us with a list of countries, how many total titles are on Netflix in the country, and the pricing?*/
+select country,
+basic_cost_per_month,
+standard_cost_per_month,
+premium_cost_per_month,
+no_of_tv_shows,
+no_of_movies,
+no_of_tv_shows + no_of_movies as Total_No_Titles
+from netflix_countries
+
+/* 	Our normal trading volume on the market is roughly 6.5 million shares per day. Return a list of our stock performance along with the trading dates for stocks that traded at least normal volume in Q3 and Q4 in 2021. Be sure to also calculate the difference between the open and close price as we will need this to analyze fluctuations within the stock.*/
+	select quarter(trading_date) as Stock_Quarter,
+year(trading_date) as Stock_Year,
+*,
+close-open as Price_Diff
+from stock_price
+where volume >= 6500000 and quarter(trading_date) > 2 and year(trading_date) = 2021
+
+/*We are considering a 15% increase for all plans for our top 10 countries with the largest content offering (excluding our top markets since we just did a price increase in our top markets). Yet, we only want to increase in these countries if the 15% increase does not exceed $1.50 per month. Return these countries with what the additional increase would be along with their new proposed prices and the size of their content.*/ 
+select *,
+no_of_tv_shows+no_of_movies as Total_Content,
+basic_cost_per_month*1.15 as New_Basic,
+standard_cost_per_month*1.15 as New_Standard,
+premium_cost_per_month*1.15 as New_Premium,
+basic_cost_per_month*.15 as Basic_Discount,
+standard_cost_per_month*.15 as Standard_Discount,
+premium_cost_per_month*.15 as Premium_Discount
+from netflix_countries
+where basic_cost_per_month*.15 <= 1.50 and standard_cost_per_month*.15 <= 1.50 and
+premium_cost_per_month*.15 <= 1.50 and country not in ('United States','Canada')
+order by Total_Content desc
+limit 10
+
+/*How many customers have been with us for at least 12 months?*/
+select user_id,
+join_date,
+getdate() as Todays_Date,
+datediff( month,join_date,'10/8/2023') as Month_Term
+from userbase
+where datediff(month,join_date,'10/8/2023') >= 12
+
+/*We are missing converted pricing for our mobile plans in each country. Due to this, we are in need of the mobile plan pricing for each country. We only need it for countries that do not use a form of the dollar as its foreign currency. Also, be sure to exclude Canada as well.*/
+select country,
+code,
+currency,
+mobile,
+mobile_usd
+from netflix_prices
+where (currency not like '%Dollar%' and currency not like '%dollars%') 
+
+/*Calculate the difference between the highest score vs. the actual score for Rotten Tomatoes scored shows but only the shows that had both Rotten Tomatoes and IMDb scores. Rotten Tomatoes’ highest score is 100.*/
+select title,
+100 as Highest_RT_Score,
+rotten_tomatoes,
+100-rotten_tomatoes as RT_Score_Diff,
+imdb
+from streaming_shows
+where rotten_tomatoes > 0 and imdb > 0
+
+/*Which 10 shows had the largest difference in scoring with the highest vs. actual Rotten Tomatoes score?*/
+select title,
+100 as Highest_RT_Score,
+rotten_tomatoes,
+100-rotten_tomatoes as RT_Score_Diff,
+imdb
+from streaming_shows
+where rotten_tomatoes > 0 and imdb > 0
+order by RT_Score_Diff desc
+limit 10
